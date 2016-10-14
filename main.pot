@@ -1,0 +1,89 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2015-08-24 18:55+Hora de verano romance\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: ENCODING\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: main.py:176
+msgid "Username:"
+msgstr ""
+
+#: main.py:179
+msgid "Password:"
+msgstr ""
+
+#: main.py:182
+msgid "Login"
+msgstr ""
+
+#: main.py:202
+msgid "Login error"
+msgstr ""
+
+#: main.py:202
+msgid "Wrong username or password"
+msgstr ""
+
+#: main.py:225 main.py:280
+msgid "Help request waiting for a technician..."
+msgstr ""
+
+#: main.py:233
+msgid "Accept"
+msgstr ""
+
+#: main.py:236
+msgid "Reject"
+msgstr ""
+
+#: main.py:307
+msgid "wants to help you"
+msgstr ""
+
+#: main.py:326
+msgid "Connection stablished"
+msgstr ""
+
+#: main.py:330
+msgid "Finish connection"
+msgstr ""
+
+#: main.py:363
+msgid "Connection finished"
+msgstr ""
+
+#: main.py:393
+msgid "Error"
+msgstr ""
+
+#: main.py:393
+msgid "x11vnc not found at %s. Please, check it and try again."
+msgstr ""
+
+#: main.py:416
+msgid "Cancel"
+msgstr ""
+
+#: main.py:416
+msgid "Close connection"
+msgstr ""
+
+#: main.py:416
+msgid "Ok"
+msgstr ""
+
+#: main.py:417
+msgid "Are you sure you want to abort the connection?"
+msgstr ""
+
