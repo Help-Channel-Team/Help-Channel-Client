@@ -11,6 +11,8 @@ El cliente que realiza la tarea anterior está realizado en Python, su GUI usand
 La comunicación con el servidor se realiza mediante servicios web de tipo REST para las tareas de gestión.
 La comunicación entre el servidor X11VNC y el servidor se realiza tunelizando la comunicación a través de WebSockets. TCP sobre HTTPS.
 
+El script crea un socket local de escucha al que se conecta el X11VNC en modo repetidor y dicha comunicación es enviada al Websocket del servidor que comunica con la parte servidor del repetidor.
+
 websocket-client 0.37.0 
     https://pypi.python.org/pypi/websocket-client/ 
 x11vnc: a VNC server for real X displays 
