@@ -16,15 +16,6 @@ import urllib
 
 import socket
 
-from tornado.ioloop import IOLoop
-from tornado.testing import AsyncTestCase, LogTrapTestCase
-from wstunnel.filters import DumpFilter, FilterException
-from wstunnel.test import EchoServer, EchoClient, RaiseFromWSFilter, RaiseToWSFilter, setup_logging, clean_logging, \
-    fixture, DELETE_TMPFILE
-from wstunnel.client import WSTunnelClient, WebSocketProxy
-from wstunnel.server import WSTunnelServer
-from wstunnel.toolbox import hex_dump, random_free_port
-
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 config = ConfigParser.ConfigParser()
@@ -65,6 +56,11 @@ def do_rest_request(url, params={}):
 
     :param url: the relative url
     """
+    proxy = urllib2.ProxyHandler({'https': 'http://usuario:password@proxyurl:proxyport'})
+    auth = urllib2.HTTPBasicAuthHandler()
+    opener = urllib2.build_opener(proxy, auth, urllib2.HTTPHandler)
+    urllib2.install_opener(opener)
+
     urllib2.urlopen(build_rest_url(url, params))
 
     return
@@ -247,18 +243,17 @@ class WaitTecFrame(Frame):
         :param controller: Frame's handler
         :type controller: HelpChannel
         """
-
+        repeaterWS2 = config_section_map("ServerConfig")['repeater_ws']
+        localTunnelPort = config_section_map("ServerConfig")['local_tunnel_port']
         repeater = config_section_map("ServerConfig")['repeater']
         port = config_section_map("ServerConfig")['port']
         system_path = config_section_map("x11vncConfig")['system_path']
 
-        #repeaterWS = config_section_map("ServerConfig")['repeaterWS']
-        #localTunnelPort = config_section_map("ServerConfig")['localTunnelPort']
-
-        #connect_parameter = "hctunnel.py %s %s" % (localTunnelPort, repeaterWS)
-	#commandTunnel = [system_path, "", connect_parameter]
-        #subprocTunnel = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)	
-
+        #connect_parameter = "python ./hctunnel.py %s %s" % (localTunnelPort, repeaterWS2)
+	#commandTunnel = [system_path, connect_parameter]
+	#print connect_parameter     
+	#tunnelSubProc = subprocess.Popen(commandTunnel, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)	
+        #print "Después de lanzar el tunel\n" 
 
         connect_parameter = "repeater=ID:%s+%s:%s" % (connection_code, repeater, port,)	
 
