@@ -56,11 +56,22 @@ def do_rest_request(url, params={}):
 
     :param url: the relative url
     """
-    proxy = urllib2.ProxyHandler({'https': 'http://usuario:password@proxyurl:proxyport'})
-    auth = urllib2.HTTPBasicAuthHandler()
-    opener = urllib2.build_opener(proxy, auth, urllib2.HTTPHandler)
-    urllib2.install_opener(opener)
+ 
+    proxy_host = config_section_map("ServerConfig")['proxy_host']
+    proxy_port = config_section_map("ServerConfig")['proxy_port']
+    proxy_username = config_section_map("ServerConfig")['proxy_username']
+    proxy_password = config_section_map("ServerConfig")['proxy_password']
+    #proxy_auth_mode = config_section_map("ServerConfig")['proxy_auth_mode']
 
+    proxy_connection_string = 'http://' + proxy_username + ":" + proxy_password + "@" + proxy_host + ":" + proxy_port
+	
+    if proxy_host:
+	print "Proxy mode"
+    	proxy = urllib2.ProxyHandler({'https': proxy_connection_string})
+    	auth = urllib2.HTTPBasicAuthHandler()
+   	opener = urllib2.build_opener(proxy, auth, urllib2.HTTPHandler)
+    	urllib2.install_opener(opener)
+  
     urllib2.urlopen(build_rest_url(url, params))
 
     return
