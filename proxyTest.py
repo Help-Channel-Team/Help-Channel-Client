@@ -30,8 +30,6 @@ proxy_password = config_section_map("ServerConfig")['proxy_password']
 
 proxy_connection_string = 'http://' + proxy_username + ":" + proxy_password + "@" + proxy_host + ":" + proxy_port
 
-os.environ['http_proxy'] = '127.0.0.1'
-os.environ['https_proxy'] = '127.0.0.1'	
 
 if proxy_host:
 	print "Proxy mode"
