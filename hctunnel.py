@@ -11,7 +11,7 @@ import os.path
 import urllib
 
 from tornado.ioloop import IOLoop
-from tornado.testing import AsyncTestCase, LogTrapTestCase
+#from tornado.testing import AsyncTestCase, LogTrapTestCase
 from wstunnel.filters import DumpFilter, FilterException
 from wstunnel.test import EchoServer, EchoClient, RaiseFromWSFilter, RaiseToWSFilter, setup_logging, clean_logging, \
     fixture, DELETE_TMPFILE
