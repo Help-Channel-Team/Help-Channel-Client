@@ -30,14 +30,8 @@ def config_section_map(section):
             dict1[option] = None
     return dict1
 
-if len(sys.argv) == 3:
-	port = sys.argv[1] 
-	WSEndPoint = sys.argv[2] 
-else:
-	print "Usage python wstunnel.py PORT WSENDPOINT"
-	sys.exit(0)
-#port = 6000
-#WSEndPoint = "wss://helpchannel.cygitsolutions.com/wsServer"
+port = "6000"
+WSEndPoint = "wss://helpchannel.cygitsolutions.com:443/wsServer"
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 config = ConfigParser.ConfigParser()

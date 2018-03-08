@@ -13,6 +13,8 @@ import platform
 import os
 import os.path
 import urllib
+import time
+import logging
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -63,6 +65,9 @@ def do_rest_request(url, params={}):
 def kill_x11():
     if subproc is not None and  subproc.poll() is not 0:
         subproc.kill()
+
+    if subproc2 is not None and  subproc2.poll() is not 0:
+        subproc2.kill()	
 
 
 # Global variables start
@@ -202,6 +207,12 @@ class LoginFrame(Frame):
             showerror(_('Login error'), _('Wrong username or password'))
         else:
 
+	    tunnelscript = config_section_map("x11vncConfig")['tunnel_script']	
+	    command = [tunnelscript]
+	
+	    global subproc2
+            subproc2 = subprocess.Popen(command,bufsize=0,shell=False)
+
             global user_access_token
             user_access_token = json_return['access_token']
 
@@ -253,7 +264,7 @@ class WaitTecFrame(Frame):
 
         global subproc
         subproc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
-
+        	
         # Rest to accept connection
         do_rest_request('/connection/accept')
 
@@ -304,7 +315,7 @@ class WaitTecFrame(Frame):
             global alive
             alive = False
             buttonsFrame.pack(side=BOTTOM, fill=X)
-            label.config(text=tech_name + + ' ' + _("wants to help you"))
+            label.config(text=tech_name + ' ' + _("wants to help you"))
 
         if alive:
             threading.Timer(float(polling_interval), self.work, (buttonsFrame, label)).start()
@@ -426,8 +437,14 @@ if __name__ == "__main__":
                 kill_x11()
                 app.destroy()
                 sys.exit(0)
+	else:
+		kill_x11()
+		app.destroy()
+		sys.exit(0)	
 
 
     app.protocol('WM_DELETE_WINDOW', on_closing)
-    app.mainloop()
-    app.destroy()
+    app.mainloop()  
+    #app.destroy()
+    os._exit(1)	
+    
