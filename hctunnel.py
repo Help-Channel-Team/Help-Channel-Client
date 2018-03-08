@@ -30,8 +30,8 @@ def config_section_map(section):
             dict1[option] = None
     return dict1
 
-port = "6000"
-WSEndPoint = "wss://helpchannel.cygitsolutions.com:443/wsServer"
+#port = "6000"
+#WSEndPoint = "wss://helpchannel.cygitsolutions.com:443/wsServer"
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 config = ConfigParser.ConfigParser()
@@ -42,6 +42,12 @@ proxy_port = config_section_map("ServerConfig")['proxy_port']
 proxy_username = config_section_map("ServerConfig")['proxy_username']
 proxy_password = config_section_map("ServerConfig")['proxy_password']
 proxy_auth_mode = config_section_map("ServerConfig")['proxy_auth_mode']
+
+#port = "6000"
+#WSEndPoint = "wss://helpchannel.cygitsolutions.com:443/wsServer"
+
+WSEndPoint = config_section_map("ServerConfig")['repeater_ws']
+port = config_section_map("ServerConfig")['local_tunnel_port']
 
 
 print "Initializing Tunnel from local TCP port " + port + " to Websocket " + WSEndPoint
