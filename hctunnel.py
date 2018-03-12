@@ -32,20 +32,32 @@ def client_send(conn,ws, task=None):
         if not line:
             break
 	print('Recibido %s en el socket' % line)
-	ws.send(line)        
+	print(len(str(line)))
+	ws.send_binary(line)        
 
 def hcwst(host, port, task=None):
     task.set_daemon()
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)	
+    sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    #sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)	
     sock = pycos.AsyncSocket(sock)
     sock.bind((host, port))
     sock.listen(1)
     print('server at %s' % str(sock.getsockname()))
 
+    proxy_host = ""
+    proxy_port = ""
+    proxy_auth=("usuario", "password")
+
     ws = websocket.WebSocket()
-    ws.connect('wss://helpchannel.cygitsolutions.com/wsServer',subprotocols=["binary"])
+
+    if not proxy_host:
+	ws.connect("wss://helpchannel.cygitsolutions.com/wsServer", subprotocols=["binary"],sockopt=(socket.IPPROTO_TCP, socket.TCP_NODELAY))
+    else:
+        ws.connect("wss://helpchannel.cygitsolutions.com/wsServer",http_proxy_host=proxy_host,http_proxy_port=proxy_port,http_proxy_auth=proxy_auth, subprotocols=["binary"],sockopt=(socket.IPPROTO_TCP, socket.TCP_NODELAY))	
+
+    #ws.connect('wss://helpchannel.cygitsolutions.com/wsServer', subprotocols=["binary"],sockopt=(socket.IPPROTO_TCP, socket.TCP_NODELAY))
+    
     print('Websocket connected to wss://helpchannel.cygitsolutions.com/wsServer')
 
     conn, addr = yield sock.accept()
