@@ -1,58 +1,74 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-import socket
-import sys
-import ConfigParser
-import gettext
-import platform
-import os
-import os.path
-import urllib
+import pycos, socket, sys, time
+import websocket
 
-from tornado.ioloop import IOLoop
-#from tornado.testing import AsyncTestCase, LogTrapTestCase
-from wstunnel.filters import DumpFilter, FilterException
-from wstunnel.test import EchoServer, EchoClient, RaiseFromWSFilter, RaiseToWSFilter, setup_logging, clean_logging, \
-    fixture, DELETE_TMPFILE
-from wstunnel.client import WSTunnelClient, WebSocketProxy
-from wstunnel.server import WSTunnelServer
-from wstunnel.toolbox import hex_dump, random_free_port
+def ws_send(conn,ws, task=None):
+    task.set_daemon()
 
-# Function to get dictionary with the values of one section of the configuration file
-def config_section_map(section):
-    dict1 = {}
-    options = config.options(section)
-    for option in options:
+    thread_pool = pycos.AsyncThreadPool(1)	
+
+    while True:
         try:
-            dict1[option] = config.get(section, option)
+	    print("Esperando datos en websocket")
+            line = yield thread_pool.async_task(ws.recv)
         except:
-            dict1[option] = None
-    return dict1
+            break
+        if not line:
+	    print("No se han recibido datos en el websocket")	
+            break
+	print('Recibido %s desde el websocket' % line)	
+	yield conn.send(line)        
 
-#port = "6000"
-#WSEndPoint = "wss://helpchannel.cygitsolutions.com:443/wsServer"
+def client_send(conn,ws, task=None):
+    task.set_daemon()
 
-BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-config = ConfigParser.ConfigParser()
-config.read(BASE_DIR + "/config.ini")
+    while True:
+        try:
+            print("Esperando datos en el socket")
+            line = yield conn.recv(1024)	
+        except:
+            break
+        if not line:
+            break
+	print('Recibido %s en el socket' % line)
+	ws.send(line)        
 
-proxy_host = config_section_map("ServerConfig")['proxy_host']
-proxy_port = config_section_map("ServerConfig")['proxy_port']
-proxy_username = config_section_map("ServerConfig")['proxy_username']
-proxy_password = config_section_map("ServerConfig")['proxy_password']
-proxy_auth_mode = config_section_map("ServerConfig")['proxy_auth_mode']
+def hcwst(host, port, task=None):
+    task.set_daemon()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)	
+    sock = pycos.AsyncSocket(sock)
+    sock.bind((host, port))
+    sock.listen(1)
+    print('server at %s' % str(sock.getsockname()))
 
-#port = "6000"
-#WSEndPoint = "wss://helpchannel.cygitsolutions.com:443/wsServer"
+    ws = websocket.WebSocket()
+    ws.connect('wss://helpchannel.cygitsolutions.com/wsServer',subprotocols=["binary"])
+    print('Websocket connected to wss://helpchannel.cygitsolutions.com/wsServer')
 
-WSEndPoint = config_section_map("ServerConfig")['repeater_ws']
-port = config_section_map("ServerConfig")['local_tunnel_port']
+    conn, addr = yield sock.accept()
+    pycos.Task(client_send, conn,ws)
+    pycos.Task(ws_send, conn,ws)
 
 
-print "Initializing Tunnel from local TCP port " + port + " to Websocket " + WSEndPoint
+if __name__ == '__main__':
 
-clt_tun = WSTunnelClient(proxies={port: WSEndPoint},family=socket.AF_INET)
-clt_tun.install_filter(DumpFilter(handler={"filename": "/tmp/clt_log"}))
-clt_tun.start()
-IOLoop.instance().start()
+    host, port = '', 6000
+    if len(sys.argv) > 1:
+        host = sys.argv[1]
+    if len(sys.argv) > 2:
+        port = int(sys.argv[2])
+    pycos.Task(hcwst, host, port)
+    if sys.version_info.major > 2:
+        read_input = input
+    else:
+        read_input = raw_input
+    while True:
+        try:
+            cmd = read_input('Pulsa "quit" o "exit" para salir: ').strip().lower()
+            if cmd.strip().lower() in ('quit', 'exit'):
+                break
+        except:
+            break
