@@ -18,16 +18,25 @@ Los parámetros a configurar son los siguientes:
 
 El script crea un socket local de escucha al que se conecta el X11VNC en modo repetidor y dicha comunicación es enviada al Websocket del servidor que comunica con la parte servidor del repetidor.
 
-websocket-client 0.37.0 
+websocket-client 0.47.0 
 
     https://pypi.python.org/pypi/websocket-client/ 
     
+    
+pycos 4.6.5
+
+https://pypi.python.org/pypi/pycos
+
+
+La interfaz gráfica usada es Tkinter, apt-get install python-tk (debian)
+
+    
 x11vnc: a VNC server for real X displays 
 
     http://www.karlrunge.com/x11vnc/
 
-En la carpeta Node Test Client hay un script de node cuyo funcionamiento es el mismo sin GUI.
+En la carpeta Node Test Client hay un script de node cuyo funcionamiento es el mismo sin GUI para Node
 
 Licensed under the EUPL V.1.1
 
-The license text is available at http://www.osor.eu/eupl and the attached PDF
+The license text is available at http://www.osor.eu/eupl
