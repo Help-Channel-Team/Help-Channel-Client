@@ -67,8 +67,8 @@ def do_rest_request(url, params={}):
 	
     if proxy_host:
 	print "Proxy mode"
-    	proxy = urllib2.ProxyHandler()
-        #proxy = urllib2.ProxyHandler({'http': proxy_connection_string_http,'https': proxy_connection_string_https})
+    	#proxy = urllib2.ProxyHandler()
+        proxy = urllib2.ProxyHandler({'http': proxy_connection_string_http,'https': proxy_connection_string_https})
     	auth = urllib2.HTTPBasicAuthHandler()
    	opener = urllib2.build_opener(proxy, auth, urllib2.HTTPHandler)
     	urllib2.install_opener(opener)
