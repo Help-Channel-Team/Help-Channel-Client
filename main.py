@@ -61,13 +61,14 @@ def do_rest_request(url, params={}):
     proxy_port = config_section_map("ServerConfig")['proxy_port']
     proxy_username = config_section_map("ServerConfig")['proxy_username']
     proxy_password = config_section_map("ServerConfig")['proxy_password']
-    #proxy_auth_mode = config_section_map("ServerConfig")['proxy_auth_mode']
+    proxy_connection_string_http = 'http://' + proxy_username + ":" + proxy_password + "@" + proxy_host + ":" + proxy_port
+    proxy_connection_string_https = 'https://' + proxy_username + ":" + proxy_password + "@" + proxy_host + ":" + proxy_port
 
-    proxy_connection_string = 'http://' + proxy_username + ":" + proxy_password + "@" + proxy_host + ":" + proxy_port
 	
     if proxy_host:
 	print "Proxy mode"
     	proxy = urllib2.ProxyHandler()
+        #proxy = urllib2.ProxyHandler({'http': proxy_connection_string_http,'https': proxy_connection_string_https})
     	auth = urllib2.HTTPBasicAuthHandler()
    	opener = urllib2.build_opener(proxy, auth, urllib2.HTTPHandler)
     	urllib2.install_opener(opener)
