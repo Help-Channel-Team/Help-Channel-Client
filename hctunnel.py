@@ -10,14 +10,14 @@ def ws_send(conn,ws, task=None):
 
     while True:
         try:
-	    print("Esperando datos en websocket")
+	    #print("Esperando datos en websocket")
             line = yield thread_pool.async_task(ws.recv)
         except:
             break
         if not line:
-	    print("No se han recibido datos en el websocket")	
+	    #print("No se han recibido datos en el websocket")	
             break
-	print('Recibido %s desde el websocket' % line)	
+	#print('Recibido %s desde el websocket' % line)	
 	yield conn.send(line)        
 
 def client_send(conn,ws, task=None):
@@ -25,14 +25,13 @@ def client_send(conn,ws, task=None):
 
     while True:
         try:
-            print("Esperando datos en el socket")
+            #print("Esperando datos en el socket")
             line = yield conn.recv(1024)	
         except:
             break
         if not line:
             break
-	print('Recibido %s en el socket' % line)
-	print(len(str(line)))
+	#print('Recibido %s en el socket' % line)
 	ws.send_binary(line)        
 
 def hcwst(host, port, task=None):
