@@ -61,7 +61,8 @@ def hcwst(host, port,repeater_ws,proxy_host,proxy_port,proxy_username,proxy_pass
     sock = pycos.AsyncSocket(sock)
     sock.bind((host, int(port)))
     sock.listen(1)
-    print('server at %s' % str(sock.getsockname()))
+
+    print('Tunnel listening at %s' % str(sock.getsockname()))
 
     ws = websocket.WebSocket()
 
@@ -70,7 +71,7 @@ def hcwst(host, port,repeater_ws,proxy_host,proxy_port,proxy_username,proxy_pass
     else:
         ws.connect(repeater_ws,http_proxy_host=proxy_host,http_proxy_port=proxy_port,http_proxy_auth=proxy_auth, subprotocols=["binary"],sockopt=(socket.IPPROTO_TCP, socket.TCP_NODELAY))	
   
-    print('Websocket connected to wss://helpchannel.cygitsolutions.com/wsServer')
+    print('Tunnel connected to %s'% repeater_ws )
 
     conn, addr = yield sock.accept()
     pycos.Task(client_send, conn,ws)
