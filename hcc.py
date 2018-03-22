@@ -104,7 +104,7 @@ class HelpChannel(Tk):
         # on top of each other, then the one we want visible
         # will be raised above the others
         self.container = Frame(self)
-        self.container.pack(side="top", fill="both", expand=True)
+        self.container.pack(side="top", fill="both", expand=True,padx=10,pady=10)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
         self.wm_title("Help Channel")
@@ -176,7 +176,7 @@ class LoginFrame(Frame):
         password = StringVar()
 
         padtop = 50
-        length_entry = 50
+        length_entry = 25
 
         Label(self, text=_('Username:')).grid(row=0, column=0, pady=(padtop, 0), sticky=S)
         Entry(self, textvariable=name, width=length_entry).grid(row=0, column=1, pady=(padtop, 0))
@@ -207,7 +207,7 @@ class LoginFrame(Frame):
             showerror(_('Login error'), _('Wrong username or password'))
         else:
 
-	    tunnelscript = config_section_map("tunnelConfig")['command_full_path']	
+	    tunnelscript = config_section_map("TunnelConfig")['command_full_path']	
 	    command = [tunnelscript]
 	
 	    global subproc2
@@ -338,7 +338,7 @@ class EstablishedConnection(Frame):
 
         label.pack(side=LEFT, fill=BOTH, expand=True)
 
-        finish_button = Button(self, text=_('Finish connection'), command=lambda: self.finish_connection(controller, ))
+        finish_button = Button(self, text=_('Shut off connection'), command=lambda: self.finish_connection(controller, ))
         finish_button.pack(in_=bottom, side=LEFT, fill=BOTH, expand=True)
 
     def finish_connection(self, controller):
@@ -434,7 +434,7 @@ if __name__ == "__main__":
                     global closeDialogOpened
                     closeDialogOpened = False
             else:
-                kill_x11()
+#                kill_x11()
                 app.destroy()
                 sys.exit(0)
 	else:

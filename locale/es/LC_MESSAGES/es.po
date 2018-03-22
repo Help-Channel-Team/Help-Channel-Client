@@ -58,7 +58,7 @@ msgid "Connection established"
 msgstr "Conexión establecida"
 
 #: main.py:298
-msgid "End connection"
+msgid "Shut off connection"
 msgstr "Terminar conexión"
 
 #: main.py:332
