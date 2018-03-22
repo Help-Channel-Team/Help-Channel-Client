@@ -88,12 +88,10 @@ if __name__ == '__main__':
     proxy_username = config_section_map("ServerConfig")['proxy_username']
     proxy_password = config_section_map("ServerConfig")['proxy_password']
 
-    repeater_ws = config_section_map("ServerConfig")['repeater_ws']
-    local_tunnel_port = config_section_map("ServerConfig")['local_tunnel_port']
+    repeater_ws = config_section_map("TunnelConfig")['tunnel_url']
+    local_tunnel_port = config_section_map("TunnelConfig")['local_port']
 
     proxy_auth=(proxy_username,proxy_password)
-
-    print("Puerto local %s " % local_tunnel_port )
 
     host, port = '127.0.0.1', int(local_tunnel_port)
     if len(sys.argv) > 1:
@@ -109,6 +107,6 @@ if __name__ == '__main__':
         try:
             cmd = read_input('Pulsa "quit" o "exit" para salir: ').strip().lower()
             if cmd.strip().lower() in ('quit', 'exit'):
-                break
+                break   
         except:
             break

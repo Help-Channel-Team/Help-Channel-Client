@@ -207,7 +207,7 @@ class LoginFrame(Frame):
             showerror(_('Login error'), _('Wrong username or password'))
         else:
 
-	    tunnelscript = config_section_map("x11vncConfig")['tunnel_script']	
+	    tunnelscript = config_section_map("tunnelConfig")['command_full_path']	
 	    command = [tunnelscript]
 	
 	    global subproc2
@@ -249,18 +249,18 @@ class WaitTecFrame(Frame):
 
     def open_connection(self, controller):
         """
-        Function to open connection with de applicant
+        Function to open connection between local vnc and remote vnc viewer 
         :param controller: Frame's handler
         :type controller: HelpChannel
         """
 
-        repeater = config_section_map("ServerConfig")['repeater']
-        port = config_section_map("ServerConfig")['port']
-        system_path = config_section_map("x11vncConfig")['system_path']
+        command_full_path = config_section_map("x11vncConfig")['command_full_path']
+        repeater = config_section_map("x11vncConfig")['remote_repeater']
+        port = config_section_map("x11vncConfig")['remote_port']
 
         connect_parameter = "repeater=ID:%s+%s:%s" % (connection_code, repeater, port,)
 
-        command = [system_path, "-connect", connect_parameter]
+        command = [command_full_path, "-connect", connect_parameter]
 
         global subproc
         subproc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
@@ -359,7 +359,7 @@ class EstablishedConnection(Frame):
         :param subproc: Launched process by the application for handles the applicant's remote desktop
         :type subproc: subprocess
         """
-        seconds = float(config_section_map("x11vncConfig")['process_polling_interval'])
+        seconds = float(config_section_map("x11vncConfig")['polling_interval'])
 
         if subproc.poll() == 0:
             do_rest_request('/connection/finish', {'finisher': 'tech'})
@@ -398,7 +398,7 @@ class CustomAskOkCancel:
 
 
 if __name__ == "__main__":
-    x11vnc_path = config_section_map("x11vncConfig")['system_path']
+    x11vnc_path = config_section_map("x11vncConfig")['command_full_path']
     if not os.path.isfile(x11vnc_path):
         # x11vnc not found
         showerror(_('Error'), _('x11vnc not found at %s. Please, check it and try again.') % x11vnc_path)
