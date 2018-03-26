@@ -46,9 +46,9 @@ def build_rest_url(relative_path, params={}):
     url_params = {'access-token': user_access_token, 'connection_code': connection_code}
     url_params.update(params)
 
-    complete_params = urllib.urlencode(url_params)
+    encoded_params = urllib.urlencode(url_params)
 
-    return rest_base + relative_path + '?' + complete_params
+    return rest_base + relative_path + '?' + encoded_params
 
 
 def do_rest_request(url, params={}):
@@ -66,11 +66,13 @@ def kill_x11():
     if subproc is not None and  subproc.poll() is not 0:
         subproc.kill()
 
-    if subproc2 is not None and  subproc2.poll() is not 0:
-        subproc2.kill()	
+    if subproc_tunnel is not None and  subproc_tunnel.poll() is not 0:
+        subproc_tunnel.kill()	
 
 
 # Global variables start
+
+status='00-NO-LOGGED'
 
 # Global variable to check if we have already found a technician or we need to keep searching
 alive = False
@@ -94,75 +96,28 @@ lang.install(unicode=1)
 
 class HelpChannel(Tk):
     """
-    Main application class. It's responsible for showing and hide¡ing the frames.
+    Main application class. It's responsible for showing user dialogs.
     """
 
     def __init__(self, *args, **kwargs):
-        Tk.__init__(self, *args, **kwargs)
+        Tk.__init__(self)
 
-        # The container is where we'll stack a bunch of frames
-        # on top of each other, then the one we want visible
-        # will be raised above the others
         self.container = Frame(self)
         self.container.pack(side="top", fill="both", expand=True,padx=10,pady=10)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
+
         self.wm_title("Help Channel")
 
-        self.frames = {}
-        for F in (LoginFrame,):
-            frame = F(self.container, self)
-            self.frames[F] = frame
-            # put all of the pages in the same location;
-            # the one on the top of the stacking order
-            # will be the one that is visible.
-            frame.grid(row=0, column=0, sticky="nsew")
-            self.frame = frame
-        self.show_frame(LoginFrame)
+        self._frame = LoginFrame(parent=self.container, controller=self) #FIRST DIALOG
 
-    def show_frame(self, c):
-        """
-        Function that call the first frame of the application. In this case, the Login screen
+    def switch_frame(self, frame_class):
+        """Destroys current frame and replaces it with a new one."""
+        new_frame = frame_class(parent=self.container, controller=self)
+        self._frame.destroy()
+        self._frame = new_frame
 
-        :param c: The first frame of the application.
-        :type c: LoginFrame
-        """
-        frame = self.frames[c]
-        frame.tkraise()
-        self.frame = frame
 
-    def show_wait_tec_frame(self):
-        """
-        Shows the 'Waiting technicians' screen
-        :return:None
-        """
-        frame = WaitTecFrame(self.container, self)
-        frame.grid(row=0, column=0, sticky="nsew")
-        frame.tkraise()
-
-        self.frame = frame
-
-    def show_established_connection(self, subproc):
-        """
-        Shows the 'Established connection' screen
-        :param subproc: Launched process by the application for handle the applicant's remote desktop
-        :type subproc: Subprocess
-        """
-        global alive
-        alive = False
-
-        frame = EstablishedConnection(self.container, self, subproc)
-        frame.grid(row=0, column=0, sticky="nsew")
-        frame.tkraise()
-
-        self.frame = frame
-
-    def show_finished_connection(self):
-        frame = FinishedConnection(self.container, self)
-        frame.grid(row=0, column=0, sticky="nsew")
-        frame.tkraise()
-
-        self.frame = frame
 
 
 class LoginFrame(Frame):
@@ -172,33 +127,44 @@ class LoginFrame(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        name = StringVar()
-        password = StringVar()
+        self.controller=controller
+
+        if config_section_map("ServerConfig")['default_user']:
+           name=StringVar(value=config_section_map("ServerConfig")['default_user'])
+        else:
+           name=StringVar() 
+
+        if config_section_map("ServerConfig")['default_password']:
+           password=StringVar(value=config_section_map("ServerConfig")['default_password'])
+        else:
+           password=StringVar() 
 
         padtop = 50
         length_entry = 25
 
         Label(self, text=_('Username:')).grid(row=0, column=0, pady=(padtop, 0), sticky=S)
-        Entry(self, textvariable=name, width=length_entry).grid(row=0, column=1, pady=(padtop, 0))
+        e1=Entry(self, textvariable=name, width=length_entry)
+        e1.grid(row=0, column=1, pady=(padtop, 0))
+        e1.focus()
 
         Label(self, text=_('Password:')).grid(row=1, column=0, pady=(0, padtop))
         Entry(self, textvariable=password, show="*", width=length_entry).grid(row=1, column=1, pady=(0, padtop))
 
-        Button(self, text=_("Login"), command=lambda: self.do_login(name.get(), password.get(), controller)).grid(row=2, columnspan=2)
+        if 0 and name.get() and password.get():
+            self.do_login(name.get(), password.get(), controller)
+        else: 
+            bt=Button(self, text=_("Login"), command=lambda: self.do_login(name.get(), password.get(), controller))
+            bt.grid(row=2, columnspan=2)
+        self.pack()
+
+
 
     def do_login(self, username, password, controller):
-        """
-        Function to perform user login into the application.
-        :param username: User name
-        :type username: str
-        :param password: Password
-        :type password: str
-        :param controller: Frame's handler
-        :type controller: HelpChannel
-        """
 
-        req_url = rest_base + '/user/login?username=%s&password=%s&machine_name=%s' % (
-            username, password, platform.node(),)
+        machine_data='-'.join(platform.linux_distribution())
+
+        req_url = rest_base + '/user/login?username=%s&password=%s&machine_name=%s&machine_data=%s' % (
+            username, password, platform.node(), machine_data)
 
         json_return = json.load(urllib2.urlopen(req_url))
         return_status = json_return['status']
@@ -210,16 +176,12 @@ class LoginFrame(Frame):
 	    tunnelscript = config_section_map("TunnelConfig")['command_full_path']	
 	    command = [tunnelscript]
 	
-	    global subproc2
-            subproc2 = subprocess.Popen(command,bufsize=0,shell=False)
+	    global subproc_tunnel, user_access_token, connection_code
+        subproc_tunnel = subprocess.Popen(command,bufsize=0,shell=False)
+        user_access_token = json_return['access_token']
+        connection_code = json_return['connection_code']
 
-            global user_access_token
-            user_access_token = json_return['access_token']
-
-            global connection_code
-            connection_code = json_return['connection_code']
-
-            controller.show_wait_tec_frame()
+        controller.switch_frame(WaitTecFrame)
 
 
 class WaitTecFrame(Frame):
@@ -229,6 +191,7 @@ class WaitTecFrame(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
+        self.controller=controller
 
         global alive
         alive = True
@@ -236,7 +199,7 @@ class WaitTecFrame(Frame):
         label = Label(self, text=_('Help request waiting for a technician...'))
         label.pack()
 
-        bottom = Frame(self, bg="white")
+        bottom = Frame(self)
         bottom.pack(side=BOTTOM, fill=X)
 
         self.work(bottom, label)
@@ -246,6 +209,9 @@ class WaitTecFrame(Frame):
 
         refuse_button = Button(self, text=_('Reject'), command=lambda: self.search_again(bottom, label))
         refuse_button.pack(in_=bottom, side=LEFT, fill=BOTH, expand=True)
+
+        self.pack()
+
 
     def open_connection(self, controller):
         """
@@ -262,17 +228,20 @@ class WaitTecFrame(Frame):
 
         command = [command_full_path, "-connect", connect_parameter]
 
-        global subproc
-        subproc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        global subproc_vnc
+        subproc_vnc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
         	
-        # Rest to accept connection
+        # Rest request to accept connection
         do_rest_request('/connection/accept')
 
-        controller.show_established_connection(subproc)
+        global alive
+        alive = False
+        controller.switch_frame(EstablishedConnection)
+
 
     def search_again(self, button_frame, label):
         """
-        Function to find technicians again when user refuses a request.
+        This method searches technicians again when user refused a request.
         :param button_frame: Container of buttons 'Accept' and 'Refuse'
         :type button_frame: tk.Frame
         :param label: Text with the message 'Waiting technicians...'
@@ -294,7 +263,7 @@ class WaitTecFrame(Frame):
 
     def work(self, buttonsFrame, label):
         """
-        Function than search availables technicians every 'polling_interval'(view config.ini) seconds.
+        This method searches available technicians every 'polling_interval' (check config.ini) seconds.
         :param buttonsFrame: Container of buttons 'Accept' and 'Refuse'
         :type buttonsFrame: tk.Frame
         :param label: Text with the message 'Waiting technicians...'
@@ -326,13 +295,14 @@ class EstablishedConnection(Frame):
     Class that represent the 'Established connection' screen
     """
 
-    def __init__(self, parent, controller, subproc=NONE):
+    def __init__(self, parent, controller):
         Frame.__init__(self, parent)
+        self.controller=controller
 
         bottom = Frame(self)
         bottom.pack(side=BOTTOM, fill=X)
 
-        self.check_alive(subproc, controller)
+        self.check_alive(subproc_vnc, controller)
 
         label = Label(self, text=_('Connection stablished'), bg="white")
 
@@ -340,6 +310,9 @@ class EstablishedConnection(Frame):
 
         finish_button = Button(self, text=_('Shut off connection'), command=lambda: self.finish_connection(controller, ))
         finish_button.pack(in_=bottom, side=LEFT, fill=BOTH, expand=True)
+
+        self.pack()
+        
 
     def finish_connection(self, controller):
         """
@@ -352,27 +325,31 @@ class EstablishedConnection(Frame):
         do_rest_request('/connection/finish', {'finisher': 'user'})
         app.destroy()
 
-    def check_alive(self, subproc, controller):
+    def check_alive(self, subproc_vnc, controller):
         """
         Check if the connection is still alive. This checking performs every X seconds.
         The amount of seconds are provided in config.ini
-        :param subproc: Launched process by the application for handles the applicant's remote desktop
-        :type subproc: subprocess
+        :param subproc_vnc: Launched process by the application for handles the applicant's remote desktop
+        :type subproc_vnc: subprocess
         """
         seconds = float(config_section_map("x11vncConfig")['polling_interval'])
 
-        if subproc.poll() == 0:
+        if subproc_vnc.poll() == 0:
             do_rest_request('/connection/finish', {'finisher': 'tech'})
-            controller.show_finished_connection()
+            controller.switch_frame(FinishedConnection)
 
-        threading.Timer(seconds, self.check_alive, (subproc, controller,)).start()
+        threading.Timer(seconds, self.check_alive, (subproc_vnc, controller,)).start()
 
 
 class FinishedConnection(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
+        self.controller=controller
+
         label = Label(self, text=_('Connection finished'))
-        label.pack()
+#        label.pack()
+
+        self.pack()
 
 
 class CustomAskOkCancel:
@@ -417,11 +394,10 @@ if __name__ == "__main__":
         """
         Function to catch the clic event generated by application's close button.
         """
+        global closeDialogOpened
 
         if not closeDialogOpened:
-            if not app.frame.__class__.__name__ == "LoginFrame" and not app.frame.__class__.__name__ == "FinishedConnection":
-
-                global closeDialogOpened
+            if status > "00-NO-LOGIN":
                 closeDialogOpened = True
 
                 if custom_ask_ok_cancel(_('Close connection'), _('Ok'), _('Cancel'),
@@ -431,7 +407,6 @@ if __name__ == "__main__":
                     app.destroy()
                     sys.exit(0)
                 else:
-                    global closeDialogOpened
                     closeDialogOpened = False
             else:
 #                kill_x11()
