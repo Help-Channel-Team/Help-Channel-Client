@@ -70,6 +70,11 @@ def kill_x11():
         subproc_tunnel.kill()	
 
 
+def get_machine_data():
+        return (('processor',platform.processor()),('system-data',platform.linux_distribution()))
+
+
+
 # Global variables start
 
 status='00-NO-LOGGED'
@@ -111,6 +116,9 @@ class HelpChannel(Tk):
 
         self._frame = LoginFrame(parent=self.container, controller=self) #FIRST DIALOG
 
+        if config_section_map("UserConfig")['auto_login'] == "True":
+          self._frame.bt.invoke()
+
     def switch_frame(self, frame_class):
         """Destroys current frame and replaces it with a new one."""
         new_frame = frame_class(parent=self.container, controller=self)
@@ -118,6 +126,28 @@ class HelpChannel(Tk):
         self._frame = new_frame
 
 
+    def open_connection(self):
+        """
+        Function to open connection between local vnc and remote vnc viewer 
+        """
+
+        command_full_path = config_section_map("x11vncConfig")['command_full_path']
+        repeater = config_section_map("x11vncConfig")['remote_repeater']
+        port = config_section_map("x11vncConfig")['remote_port']
+
+        connect_parameter = "repeater=ID:%s+%s:%s" % (connection_code, repeater, port,)
+
+        command = [command_full_path, "-connect", connect_parameter]
+
+        global subproc_vnc
+        subproc_vnc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        	
+        # Rest request to accept connection
+        do_rest_request('/connection/accept')
+
+        global alive
+        alive = False
+        self.switch_frame(EstablishedConnection)
 
 
 class LoginFrame(Frame):
@@ -129,13 +159,13 @@ class LoginFrame(Frame):
         Frame.__init__(self, parent)
         self.controller=controller
 
-        if config_section_map("ServerConfig")['default_user']:
-           name=StringVar(value=config_section_map("ServerConfig")['default_user'])
+        if config_section_map("UserConfig")['default_user']:
+           name=StringVar(value=config_section_map("UserConfig")['default_user'])
         else:
            name=StringVar() 
 
-        if config_section_map("ServerConfig")['default_password']:
-           password=StringVar(value=config_section_map("ServerConfig")['default_password'])
+        if config_section_map("UserConfig")['default_password']:
+           password=StringVar(value=config_section_map("UserConfig")['default_password'])
         else:
            password=StringVar() 
 
@@ -150,21 +180,19 @@ class LoginFrame(Frame):
         Label(self, text=_('Password:')).grid(row=1, column=0, pady=(0, padtop))
         Entry(self, textvariable=password, show="*", width=length_entry).grid(row=1, column=1, pady=(0, padtop))
 
-        if 0 and name.get() and password.get():
-            self.do_login(name.get(), password.get(), controller)
-        else: 
-            bt=Button(self, text=_("Login"), command=lambda: self.do_login(name.get(), password.get(), controller))
-            bt.grid(row=2, columnspan=2)
+        self.bt=Button(self, text=_("Login"), command=lambda: self.do_login(name.get(), password.get(), controller))
+        self.bt.grid(row=2, columnspan=2)
         self.pack()
 
 
 
     def do_login(self, username, password, controller):
 
-        machine_data='-'.join(platform.linux_distribution())
+        token=config_section_map("UserConfig")['default_token']
+        encoded_params=urllib.urlencode(get_machine_data())
 
-        req_url = rest_base + '/user/login?username=%s&password=%s&machine_name=%s&machine_data=%s' % (
-            username, password, platform.node(), machine_data)
+        req_url = rest_base + '/user/login?username=%s&password=%s&machine_name=%s&machine_token=%s&machine_data=%s' % (
+            username, password, platform.node(), token, encoded_params)
 
         json_return = json.load(urllib2.urlopen(req_url))
         return_status = json_return['status']
@@ -181,7 +209,10 @@ class LoginFrame(Frame):
         user_access_token = json_return['access_token']
         connection_code = json_return['connection_code']
 
-        controller.switch_frame(WaitTecFrame)
+        if config_section_map("UserConfig")['show_technician'] == "True":
+           controller.switch_frame(WaitTecFrame)
+        else:
+           controller.open_connection()
 
 
 class WaitTecFrame(Frame):
@@ -204,7 +235,7 @@ class WaitTecFrame(Frame):
 
         self.work(bottom, label)
 
-        accept_button = Button(self, text=_('Accept'), command=lambda: self.open_connection(controller))
+        accept_button = Button(self, text=_('Accept'), command=lambda: controller.open_connection())
         accept_button.pack(in_=bottom, side=LEFT, fill=BOTH, expand=True)
 
         refuse_button = Button(self, text=_('Reject'), command=lambda: self.search_again(bottom, label))
@@ -213,30 +244,7 @@ class WaitTecFrame(Frame):
         self.pack()
 
 
-    def open_connection(self, controller):
-        """
-        Function to open connection between local vnc and remote vnc viewer 
-        :param controller: Frame's handler
-        :type controller: HelpChannel
-        """
 
-        command_full_path = config_section_map("x11vncConfig")['command_full_path']
-        repeater = config_section_map("x11vncConfig")['remote_repeater']
-        port = config_section_map("x11vncConfig")['remote_port']
-
-        connect_parameter = "repeater=ID:%s+%s:%s" % (connection_code, repeater, port,)
-
-        command = [command_full_path, "-connect", connect_parameter]
-
-        global subproc_vnc
-        subproc_vnc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
-        	
-        # Rest request to accept connection
-        do_rest_request('/connection/accept')
-
-        global alive
-        alive = False
-        controller.switch_frame(EstablishedConnection)
 
 
     def search_again(self, button_frame, label):
