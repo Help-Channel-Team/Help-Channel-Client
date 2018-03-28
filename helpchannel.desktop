@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Help Channel
+Comment=Ask for help and allows desktop remote control 
+Comment[es]=Solicita ayuda y permite el control remoto del escritorio
+Keywords=help;support;remote-control;vnc;
+Exec=helpchannel
+Icon=helpchannel
+Encoding=UTF-8
+Terminal=false
+Type=Application
+StartupNotify=false
+Categories=Utility;
+
