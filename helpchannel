@@ -98,9 +98,11 @@ language = config_section_map("i18nConfig")['language'] or 'es'
 
 try:
     lang = gettext.translation(language, localedir=BASE_DIR + '/locale', languages=[language])
-    lang.install(unicode=1)
 except IOError:
     print "No translations available"
+
+lang.install(unicode=1)
+
 
 class HelpChannel(Tk):
     """

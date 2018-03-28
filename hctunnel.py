@@ -80,9 +80,8 @@ def hcwst(host, port,repeater_ws,proxy_host,proxy_port,proxy_username,proxy_pass
 
 if __name__ == '__main__':
 
-    BASE_DIR = os.path.dirname(os.path.realpath(__file__))
     config = ConfigParser.ConfigParser()
-    config.read(BASE_DIR + "/config.ini")
+    config.read("/etc/helpchannel.conf")
 
     proxy_host = config_section_map("ServerConfig")['proxy_host']
     proxy_port = config_section_map("ServerConfig")['proxy_port']
